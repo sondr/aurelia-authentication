@@ -909,7 +909,6 @@ var Authentication = exports.Authentication = (_dec5 = (0, _aureliaDependencyInj
 
   Authentication.prototype.isTokenExpired = function isTokenExpired() {
     var timeLeft = this.getTtl();
-
     return Number.isNaN(timeLeft) ? undefined : timeLeft < 0;
   };
 
@@ -1174,7 +1173,6 @@ var AuthService = exports.AuthService = (_dec12 = (0, _aureliaDependencyInjectio
 
         return;
       }
-
       _this9.setResponseObject(null);
 
       if (_this9.config.expiredRedirect) {
@@ -1182,7 +1180,8 @@ var AuthService = exports.AuthService = (_dec12 = (0, _aureliaDependencyInjectio
       }
     };
 
-    this.timeoutID = _aureliaPal.PLATFORM.global.setTimeout(expiredTokenHandler, ttl);
+    this.timeoutID = _aureliaPal.PLATFORM.global.setTimeout(expiredTokenHandler, Math.min(ttl, Math.pow(2, 31) - 1));
+    if (ttl > Math.pow(2, 31) - 1) logger.warn("Accesstoken lifetime exceeds 24.85 days!");
     _aureliaPal.PLATFORM.addEventListener('focus', function () {
       if (_this9.isTokenExpired()) {
         expiredTokenHandler();
@@ -1558,19 +1557,13 @@ var FetchConfig = exports.FetchConfig = (_dec16 = (0, _aureliaDependencyInjectio
     var _this17 = this;
 
     if (Array.isArray(client)) {
-      var _ret = function () {
-        var configuredClients = [];
+      var configuredClients = [];
 
-        client.forEach(function (toConfigure) {
-          configuredClients.push(_this17.configure(toConfigure));
-        });
+      client.forEach(function (toConfigure) {
+        configuredClients.push(_this17.configure(toConfigure));
+      });
 
-        return {
-          v: configuredClients
-        };
-      }();
-
-      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      return configuredClients;
     }
 
     if (typeof client === 'string') {

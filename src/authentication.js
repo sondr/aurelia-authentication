@@ -138,7 +138,6 @@ export class Authentication {
 
   isTokenExpired(): boolean {
     const timeLeft = this.getTtl();
-
     return Number.isNaN(timeLeft) ? undefined : timeLeft < 0;
   }
 
@@ -179,7 +178,9 @@ export class Authentication {
     this.payload = null;
     try {
       this.payload = this.accessToken ? jwtDecode(this.accessToken) : null;
-    } catch (_) {} // eslint-disable-line no-empty
+    } catch (_) { 
+      //logger.warn("Couldnt decode jwt, ", _);
+     } // eslint-disable-line no-empty
 
     // get exp either with from jwt or with supplied function
     this.exp = parseInt((typeof this.config.getExpirationDateFromResponse === 'function'

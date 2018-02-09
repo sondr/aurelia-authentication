@@ -1007,7 +1007,6 @@ System.register(['extend', 'jwt-decode', 'aurelia-pal', 'aurelia-path', 'aurelia
 
         Authentication.prototype.isTokenExpired = function isTokenExpired() {
           var timeLeft = this.getTtl();
-
           return Number.isNaN(timeLeft) ? undefined : timeLeft < 0;
         };
 
@@ -1275,7 +1274,6 @@ System.register(['extend', 'jwt-decode', 'aurelia-pal', 'aurelia-path', 'aurelia
 
               return;
             }
-
             _this9.setResponseObject(null);
 
             if (_this9.config.expiredRedirect) {
@@ -1283,7 +1281,8 @@ System.register(['extend', 'jwt-decode', 'aurelia-pal', 'aurelia-path', 'aurelia
             }
           };
 
-          this.timeoutID = PLATFORM.global.setTimeout(expiredTokenHandler, ttl);
+          this.timeoutID = PLATFORM.global.setTimeout(expiredTokenHandler, Math.min(ttl, Math.pow(2, 31) - 1));
+          if (ttl > Math.pow(2, 31) - 1) logger.warn("Accesstoken lifetime exceeds 24.85 days!");
           PLATFORM.addEventListener('focus', function () {
             if (_this9.isTokenExpired()) {
               expiredTokenHandler();
@@ -1668,19 +1667,13 @@ System.register(['extend', 'jwt-decode', 'aurelia-pal', 'aurelia-path', 'aurelia
           var _this17 = this;
 
           if (Array.isArray(client)) {
-            var _ret = function () {
-              var configuredClients = [];
+            var configuredClients = [];
 
-              client.forEach(function (toConfigure) {
-                configuredClients.push(_this17.configure(toConfigure));
-              });
+            client.forEach(function (toConfigure) {
+              configuredClients.push(_this17.configure(toConfigure));
+            });
 
-              return {
-                v: configuredClients
-              };
-            }();
-
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+            return configuredClients;
           }
 
           if (typeof client === 'string') {
